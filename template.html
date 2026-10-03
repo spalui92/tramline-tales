@@ -308,6 +308,18 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 #next .tx{text-align:right}
 
 /* ---------- tablet (phones and small screens) ---------- */
+.tprop{display:none}
+.scene.tablet .tprop{display:block;position:absolute;pointer-events:none}
+.scene.tablet .card{display:block;z-index:-1;left:8px;top:-82px;width:250px;max-width:none;transform-origin:0 0;transform:rotate(-4deg) scale(.66)}
+.scene.tablet .pencil2{right:-34px;bottom:46px;width:150px;height:13px;z-index:-1;transform:rotate(-58deg);transform-origin:100% 50%;border-radius:2px;
+  background:linear-gradient(180deg,#f2c14a 0 30%,#d9a427 30% 36%,#f6cf63 36% 64%,#c8901d 64% 70%,#e7b33d 70%);box-shadow:0 8px 10px rgba(25,10,0,.4)}
+.scene.tablet .pencil2::before{content:"";position:absolute;left:-24px;top:0;width:24px;height:13px;background:linear-gradient(90deg,#2a2622 0 22%,#e9c79a 22%);clip-path:polygon(0 50%,100% 0,100% 100%)}
+.scene.tablet .kulhad{display:none}
+.scene.tablet.roomy .kulhad{display:block;left:6px;bottom:calc(-24px - var(--gap) / 2 - 40px);width:84px;height:84px;filter:drop-shadow(0 7px 7px rgba(25,10,0,.45))}
+body.tab .stand{display:none}
+body.tab .plate-b{padding:3px 14px}
+body.tab .plate-b b{font-size:11px}
+body.tab .plate-b span{font-size:13px}
 .track{display:none}
 .scene.tablet::before{content:"";position:absolute;inset:-30px -12px -24px -12px;border-radius:26px;z-index:0;
   background:linear-gradient(150deg,#34312d,#191715 55%,#24211e);
@@ -336,6 +348,11 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
   .keys-sm{gap:10px}
   .key.sm{width:36px;height:36px}
   .tix .st{font-size:15px;min-width:2em;padding:0 6px}
+}
+@media (max-width:400px){
+  .tix .tx{padding:6px 6px;letter-spacing:.03em;font-size:10.5px}
+  .tix .st{min-width:1.6em;padding:0 4px;font-size:14px}
+  .bar{gap:8px 8px}.keys-sm{gap:8px}.key.sm{width:34px;height:34px;font-size:14px}
 }
 @media (prefers-reduced-motion: reduce){
   .blinds{animation:none}
@@ -394,6 +411,21 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 <main class="stage" id="stage">
   <div class="scene" id="scene">
     <div class="ring" aria-hidden="true"></div>
+    <div class="tprop pencil2" aria-hidden="true"></div>
+    <svg class="tprop kulhad" viewBox="0 0 120 120" aria-hidden="true">
+      <defs><radialGradient id="kTea" cx=".45" cy=".4" r=".6"><stop offset="0" stop-color="#c9884a"/><stop offset=".7" stop-color="#9a5a26"/><stop offset="1" stop-color="#6e3b17"/></radialGradient>
+      <linearGradient id="kClay" x1="0" x2="1"><stop offset="0" stop-color="#8e3f22"/><stop offset=".45" stop-color="#c0653a"/><stop offset="1" stop-color="#7a341c"/></linearGradient></defs>
+      <ellipse cx="66" cy="70" rx="44" ry="40" fill="none" stroke="rgba(110,60,25,.28)" stroke-width="5"/>
+      <circle cx="60" cy="60" r="38" fill="url(#kClay)"/>
+      <circle cx="60" cy="60" r="38" fill="none" stroke="#5e2812" stroke-width="1.2"/>
+      <circle cx="60" cy="60" r="33" fill="#a44f2b"/>
+      <circle cx="60" cy="60" r="31" fill="#d08a5c"/>
+      <circle cx="60" cy="60" r="29" fill="url(#kTea)"/>
+      <circle cx="60" cy="60" r="29" fill="none" stroke="rgba(60,25,8,.45)" stroke-width="1"/>
+      <path d="M88 42 q6 4 4 12" fill="none" stroke="#7e3a1a" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="52" cy="50" rx="10" ry="5" fill="rgba(255,235,200,.28)" transform="rotate(-25 52 50)"/>
+      <path d="M30 40 A38 38 0 0 1 60 22" fill="none" stroke="rgba(255,210,170,.35)" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
     <div class="card" id="card" aria-hidden="true"></div>
     <div class="book closed" id="book">
       <div class="board board-l"></div>
@@ -768,18 +800,24 @@ function layout(){
   const availW=wide?W-2*110:W-32, availH=wide?H-104:H-(W<=560?196:150);
   const spread=availW>=700&&availH>=320;
   const tab=!spread&&!wide;
-  const pw=Math.floor(spread?Math.min(availW/2-(wide?0:70),availH/1.414,wide?820:540):Math.min(availW-(tab?26:18),(availH-(tab?54:0))/1.414,520));
+  const pw=Math.floor(spread?Math.min(availW/2-(wide?0:70),availH/1.414,wide?820:540):Math.min(availW-(tab?14:18),(availH-(tab?100:0))/1.414,520));
   const r=document.documentElement.style;r.setProperty("--pw",pw+"px");r.setProperty("--ph",Math.round(pw*1.414)+"px");
   const m=spread?"spread":"single";
   if(m!==mode){ if(m==="single"){pi=Math.max(0,2*k-1);} else {k=Math.ceil(pi/2);} mode=m; }
   scene.classList.toggle("single",mode==="single");
   scene.classList.toggle("tablet",tab);
-  $("stage").style.paddingTop=tab?"44px":"";
+  const st=$("stage").style;st.paddingTop=tab?"86px":"";st.alignItems=tab?"flex-start":"";st.paddingInline=tab?"10px":"";
+  document.body.classList.toggle("tab",tab);
+}
+function fitProps(){
+  if(!scene.classList.contains("tablet")){scene.classList.remove("roomy");return}
+  const t=scene.getBoundingClientRect().bottom+24,b=document.querySelector(".bar").getBoundingClientRect().top,g=b-t;
+  scene.style.setProperty("--gap",Math.max(0,g)+"px");scene.classList.toggle("roomy",g>=104);
 }
 function renderStatic(){
   if(mode==="spread"){setSlot(L,2*k-1,"left",false);setSlot(R,2*k,"right",false);book.classList.toggle("closed",k===0);}
   else {L.innerHTML="";setSlot(R,pi,"right",false);book.classList.toggle("closed",pi===0);}
-  ui();
+  ui();fitProps();
 }
 function ui(){
   const prog=mode==="spread"?k/Math.max(1,MAXK):pi/Math.max(1,P.length-1);
