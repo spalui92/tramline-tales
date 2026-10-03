@@ -7,8 +7,8 @@
 /* Layout: an open hardbound notebook lying on an oak writing desk, lit by afternoon light through window blinds (night: a desk lamp). Two pages per entry, flipped like a real book. */
 :root{
   /* room + desk (change with theme) */
-  --wood:#9a693b;
-  --wood-line:#4f2c12;
+  --wood:#bd8f5e;
+  --wood-line:#6e4724;
   --stripe:rgba(48,24,6,.17);
   --stripe-on:1;
   --room:linear-gradient(118deg, rgba(255,232,180,.22) 0%, rgba(255,232,180,0) 55%), radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 45%, rgba(40,18,4,.38) 100%);
@@ -314,8 +314,6 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 .scene.tablet .pencil2{right:-34px;bottom:46px;width:150px;height:13px;z-index:-1;transform:rotate(-58deg);transform-origin:100% 50%;border-radius:2px;
   background:linear-gradient(180deg,#f2c14a 0 30%,#d9a427 30% 36%,#f6cf63 36% 64%,#c8901d 64% 70%,#e7b33d 70%);box-shadow:0 8px 10px rgba(25,10,0,.4)}
 .scene.tablet .pencil2::before{content:"";position:absolute;left:-24px;top:0;width:24px;height:13px;background:linear-gradient(90deg,#2a2622 0 22%,#e9c79a 22%);clip-path:polygon(0 50%,100% 0,100% 100%)}
-.scene.tablet .kulhad{display:none}
-.scene.tablet.roomy .kulhad{display:block;left:6px;bottom:calc(-24px - var(--gap) / 2 - 40px);width:84px;height:84px;filter:drop-shadow(0 7px 7px rgba(25,10,0,.45))}
 body.tab .stand{display:none}
 body.tab .plate-b{padding:3px 14px}
 body.tab .plate-b b{font-size:11px}
@@ -412,20 +410,6 @@ body.tab .plate-b span{font-size:13px}
   <div class="scene" id="scene">
     <div class="ring" aria-hidden="true"></div>
     <div class="tprop pencil2" aria-hidden="true"></div>
-    <svg class="tprop kulhad" viewBox="0 0 120 120" aria-hidden="true">
-      <defs><radialGradient id="kTea" cx=".45" cy=".4" r=".6"><stop offset="0" stop-color="#c9884a"/><stop offset=".7" stop-color="#9a5a26"/><stop offset="1" stop-color="#6e3b17"/></radialGradient>
-      <linearGradient id="kClay" x1="0" x2="1"><stop offset="0" stop-color="#8e3f22"/><stop offset=".45" stop-color="#c0653a"/><stop offset="1" stop-color="#7a341c"/></linearGradient></defs>
-      <ellipse cx="66" cy="70" rx="44" ry="40" fill="none" stroke="rgba(110,60,25,.28)" stroke-width="5"/>
-      <circle cx="60" cy="60" r="38" fill="url(#kClay)"/>
-      <circle cx="60" cy="60" r="38" fill="none" stroke="#5e2812" stroke-width="1.2"/>
-      <circle cx="60" cy="60" r="33" fill="#a44f2b"/>
-      <circle cx="60" cy="60" r="31" fill="#d08a5c"/>
-      <circle cx="60" cy="60" r="29" fill="url(#kTea)"/>
-      <circle cx="60" cy="60" r="29" fill="none" stroke="rgba(60,25,8,.45)" stroke-width="1"/>
-      <path d="M88 42 q6 4 4 12" fill="none" stroke="#7e3a1a" stroke-width="3" stroke-linecap="round"/>
-      <ellipse cx="52" cy="50" rx="10" ry="5" fill="rgba(255,235,200,.28)" transform="rotate(-25 52 50)"/>
-      <path d="M30 40 A38 38 0 0 1 60 22" fill="none" stroke="rgba(255,210,170,.35)" stroke-width="2.5" stroke-linecap="round"/>
-    </svg>
     <div class="card" id="card" aria-hidden="true"></div>
     <div class="book closed" id="book">
       <div class="board board-l"></div>
@@ -549,8 +533,7 @@ function artInner(p,i,pending,measuring){
         <h2 class="title typed">${typed(e.title,j*31+2,pending)}</h2>`;
   h+=p.blocks.map(blockHTML).join("")+`</div>`;
   if(!measuring){
-    if(p.last)h+=`<span class="sign">&mdash; ${esc(CFG.initials)}</span>${stampSVG(e.date,pending)}
-      <button class="share" data-share="${esc(e.slug)}" type="button">&#8599; copy link to this entry</button>`;
+    if(p.last)h+=`<span class="sign">&mdash; ${esc(CFG.initials)}</span>${stampSVG(e.date,pending)}`;
     else if(!p.textEnds)h+=`<span class="contd">contd. overleaf &rarr;</span>`;
   }
   return h+`</div>`;
@@ -809,15 +792,10 @@ function layout(){
   const st=$("stage").style;st.paddingTop=tab?"86px":"";st.alignItems=tab?"flex-start":"";st.paddingInline=tab?"10px":"";
   document.body.classList.toggle("tab",tab);
 }
-function fitProps(){
-  if(!scene.classList.contains("tablet")){scene.classList.remove("roomy");return}
-  const t=scene.getBoundingClientRect().bottom+24,b=document.querySelector(".bar").getBoundingClientRect().top,g=b-t;
-  scene.style.setProperty("--gap",Math.max(0,g)+"px");scene.classList.toggle("roomy",g>=104);
-}
 function renderStatic(){
   if(mode==="spread"){setSlot(L,2*k-1,"left",false);setSlot(R,2*k,"right",false);book.classList.toggle("closed",k===0);}
   else {L.innerHTML="";setSlot(R,pi,"right",false);book.classList.toggle("closed",pi===0);}
-  ui();fitProps();
+  ui();
 }
 function ui(){
   const prog=mode==="spread"?k/Math.max(1,MAXK):pi/Math.max(1,P.length-1);
