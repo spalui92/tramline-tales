@@ -573,7 +573,7 @@ function spaceLeft(p){
   const c=meas.querySelector(".content"),last=c.lastElementChild;
   return c.clientHeight-(last?last.offsetTop+last.offsetHeight:0);
 }
-function fillPage(p,q){
+function fillPage(p,q,wordFlow){
   const lhPx=()=>meas.querySelector(".content").clientWidth/76*5.4;
   while(q.length){
     const b=q[0];p.blocks.push(b);
@@ -587,13 +587,19 @@ function fillPage(p,q){
     if(b.t!=="p"){if(!p.blocks.length){p.blocks.push(q.shift())}return}
     const words=b.x.split(" ");let lo=0,hi=words.length-1;
     while(lo<hi){const mid=Math.ceil((lo+hi)/2);p.blocks.push({t:"p",x:words.slice(0,mid).join(" "),cont:b.cont});const ok=fits(p);p.blocks.pop();ok?lo=mid:hi=mid-1}
-    if(lo>=4||(!p.blocks.length&&lo>0)){p.blocks.push({t:"p",x:words.slice(0,lo).join(" "),cont:b.cont});q[0]={t:"p",x:words.slice(lo).join(" "),cont:true}}
+    // never break a sentence across pages: cut after the last full stop that fits
+    let k=lo;if(!wordFlow)while(k>0&&(!/[.!?]["')\u201d\u2019]*$/.test(words[k-1])||/^[A-Z]\/\.$/.test(words[k-1])))k--;
+    if(k===0&&(wordFlow||!p.blocks.length)&&lo>=(wordFlow&&p.blocks.length?4:1))k=lo;   // a single huge sentence on an empty page has to split somewhere
+    if(k>0){
+      if(k<words.length){p.blocks.push({t:"p",x:words.slice(0,k).join(" "),cont:b.cont});q[0]={t:"p",x:words.slice(k).join(" "),cont:true}}
+      else{p.blocks.push(q.shift())}
+    } else if(p.blocks.length&&p.blocks[p.blocks.length-1].t==="h"){q.unshift(p.blocks.pop())}  // no heading left stranded at the foot of a page
     return;
   }
 }
 function paginate(e){
   const q=e.body.map(b=>({...b}));const pages=[];
-  while(q.length||!pages.length){const p={kind:"art",e,n:pages.length,blocks:[],last:false};fillPage(p,q);pages.push(p);if(!q.length)break}
+  while(q.length||!pages.length){const p={kind:"art",e,n:pages.length,blocks:[],last:false};fillPage(p,q,e.flow==="words");pages.push(p);if(!q.length)break}
   // the final page also carries the signature and stamp, so it holds a little less
   let lp=pages[pages.length-1];lp.last=true;
   if(!fits(lp)){

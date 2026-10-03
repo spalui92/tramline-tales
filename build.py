@@ -108,6 +108,7 @@ def read_article(path):
         "title": meta["title"],
         "date": meta["date"],
         "tag": meta.get("tag", ""),
+        "flow": meta.get("flow", ""),
         "note": meta.get("note", ""),
         "summary": summary,
         "image": next((b["src"] for b in blocks if b["t"] == "img"), ""),
@@ -242,7 +243,7 @@ def main():
 
     data = {"config": {k: cfg[k] for k in ("name", "author", "initials", "place", "stampPlace",
                                              "start", "days", "motto", "siteUrl")},
-            "entries": [{k: e[k] for k in ("slug", "title", "date", "tag", "note", "body")}
+            "entries": [{k: e[k] for k in ("slug", "title", "date", "tag", "note", "flow", "body")}
                         for e in entries]}
     data_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
 
