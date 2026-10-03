@@ -472,7 +472,7 @@ function artInner(p,i,pending,measuring){
   if(!measuring){
     if(p.last)h+=`<span class="sign">&mdash; ${esc(CFG.initials)}</span>${stampSVG(e.date,pending)}
       <button class="share" data-share="${esc(e.slug)}" type="button">&#8599; copy link to this entry</button>`;
-    else h+=`<span class="contd">contd. overleaf &rarr;</span>`;
+    else if(!p.textEnds)h+=`<span class="contd">contd. overleaf &rarr;</span>`;
   }
   return h+`</div>`;
 }
@@ -546,15 +546,8 @@ function paginate(e){
   // the final page also carries the signature and stamp, so it holds a little less
   let lp=pages[pages.length-1];lp.last=true;
   if(!fits(lp)){
-    // carry the closing paragraph or two, whole, onto a final page with the signature and stamp
-    lp.last=false;const np={kind:"art",e,n:pages.length,blocks:[],last:true};
-    while(lp.blocks.length>1&&np.blocks.length<2&&lp.blocks[lp.blocks.length-1].t==="p"){
-      const b=lp.blocks.pop();np.blocks.unshift(b);
-      if(!fits(np)){np.blocks.shift();lp.blocks.push(b);break}
-    }
-    if(np.blocks.length){pages.push(np)}
-    else{const q2=lp.blocks;lp.blocks=[];lp.last=true;fillPage(lp,q2);lp.last=false;
-      const np2={kind:"art",e,n:pages.length,blocks:[],last:true};fillPage(np2,q2);pages.push(np2);}
+    // the text stays where it fell; the signature and stamp get a sign-off page of their own
+    lp.last=false;lp.textEnds=true;pages.push({kind:"art",e,n:pages.length,blocks:[],last:true});
   }
   pages[pages.length-1].last=true;
   return pages;
