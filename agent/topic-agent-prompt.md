@@ -47,7 +47,7 @@ summary: <one or two lines for Google and link previews>
 
 <paragraphs separated by blank lines; subheads start with "## ">
 
-Ask for edits. When she approves: if a GitHub repository for the diary is named here (REPOSITORY: tramline-tales on GitHub, not created yet) and reachable, add the file as articles/<date>.md (add "-b" if that name exists) and push to main; otherwise also send the .md file with SendUserFile. Mark the topic as WRITTEN in /areas/diary-topic-log.md.
+Ask for edits. When she approves, publish it to the diary: attach the GitHub repository spalui92/tramline-tales with push access (add_repo), clone it, save the article as articles/<date>.md (add "-b" if that name exists), optionally run "python3 build.py" to check it builds, then commit and push to main. GitHub rebuilds the live site at https://spalui92.github.io/tramline-tales in about a minute; send her the entry's link, https://spalui92.github.io/tramline-tales/e/<file name without .md>.html. If the push is refused, send the .md file with SendUserFile and tell her plainly why. Mark the topic as WRITTEN in /areas/diary-topic-log.md.
 
 STYLE (distilled from the reference columns, posts and tweets she chose; capture the spirit, never copy lines)
 - Voice: a worldly, urbane Indian commentator with a marketer's eye. Confident, witty, a little mischievous, never mean. Opinions are stated plainly, then defended.
