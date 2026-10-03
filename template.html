@@ -234,6 +234,8 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 .bookplate .pl{font-family:var(--f-body);font-size:2.6cqw;color:var(--ink-soft);display:block;margin-top:2.5cqw}
 .bookplate .rule{height:.3cqw;background:var(--navy);opacity:.4;margin:4cqw 8cqw}
 .bookplate .mt{font-family:var(--f-body);font-size:2.7cqw;line-height:1.6;display:block}
+.bookplate .ded{font-style:italic;font-size:2.5cqw;line-height:1.75;white-space:nowrap}
+.page.endp .bookplate:has(.ded){left:12cqw;right:12cqw}
 .blankback{background:var(--paper-back)}
 
 /* ---------- bar (typewriter keys + brass plate) ---------- */
@@ -452,7 +454,7 @@ function render(i,side,pending){
       <div class="deboss">${esc(CFG.stampPlace.toUpperCase())}</div><div class="cover-hint">open me &rarr;</div></div>`; break;
     case "endp":
       inner=`<div class="sheet"><div class="bookplate"><span class="ex">EX LIBRIS</span><span class="nm">${esc(CFG.author)}</span><span class="pl">${esc(CFG.place)}</span>
-      <div class="rule"></div><span class="mt">${CFG.motto.map(esc).join("<br>")}<br>Every ${esc(daysText())}.</span></div></div>`; break;
+      <div class="rule"></div><span class="mt ded">${CFG.motto.map(esc).join("<br>")}</span></div></div>`; break;
     case "contents":
       inner=`<div class="sheet ruled">${runhead(esc(CFG.name),"")}<div class="content">
         ${p.first?`<span class="label">the index, kept honest</span><h2 class="title">Contents</h2>`:`<span class="label">contents, contd.</span>`}
