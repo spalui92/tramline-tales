@@ -177,13 +177,13 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 .caret{display:inline-block;width:.6em;height:.12em;background:var(--ink);vertical-align:baseline;animation:blink 1.1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 
-.stamp{position:absolute;right:9cqw;bottom:6cqw;width:27cqw;aspect-ratio:1;max-width:100%;color:var(--stamp);transform:rotate(-14deg);opacity:.8;z-index:1;
+.stamp{position:absolute;right:8.5cqw;bottom:3.6cqw;width:22cqw;aspect-ratio:1;max-width:100%;color:var(--stamp);transform:rotate(-14deg);opacity:.8;z-index:1;
   font-family:var(--f-type);mix-blend-mode:multiply;-webkit-mask-image:var(--speck);mask-image:var(--speck);-webkit-mask-size:90px;mask-size:90px}
 .stamp svg{width:100%;height:100%;display:block}
 .stamp.wait{opacity:0}
 .stamp.thunk{animation:thunk .32s cubic-bezier(.2,.9,.3,1.3)}
 @keyframes thunk{from{opacity:0;transform:rotate(-14deg) scale(1.6)}to{opacity:.8;transform:rotate(-14deg) scale(1)}}
-.sign{position:absolute;left:16cqw;bottom:calc(var(--lh) * 3);font-family:var(--f-hand);color:var(--navy);font-size:5cqw;line-height:var(--lh);transform:rotate(-3deg);z-index:1}
+.sign{position:absolute;left:16cqw;bottom:calc(var(--lh) * 2.1);font-family:var(--f-hand);color:var(--navy);font-size:5cqw;line-height:var(--lh);transform:rotate(-3deg);z-index:1}
 
 /* contents page */
 .toc{list-style:none;margin:0;padding:0}
@@ -197,10 +197,10 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 
 /* pagination + new page parts */
 .measure{position:fixed;left:-10000px;top:0;width:600px;height:848px;visibility:hidden;pointer-events:none;contain:strict}
-.content.closing{bottom:calc(var(--lh) * 7)}
-.content.measuring{right:9.5cqw}
+.content.closing{bottom:calc(var(--lh) * 4.9)}
+.content.measuring{right:8.4cqw}
 .contd{position:absolute;right:8cqw;bottom:calc(var(--lh) * .55);font-family:var(--f-hand);color:var(--ink-soft);font-size:3.7cqw;line-height:1;z-index:1}
-.share{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;left:16cqw;bottom:calc(var(--lh) * 1.15);font-family:var(--f-body);font-size:2.35cqw;line-height:1.3;color:var(--navy);border-bottom:.25cqw dotted currentColor;z-index:2;max-width:46cqw;overflow-wrap:anywhere}
+.share{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;left:16cqw;bottom:calc(var(--lh) * .65);font-family:var(--f-body);font-size:2.35cqw;line-height:1.3;color:var(--navy);border-bottom:.25cqw dotted currentColor;z-index:2;max-width:46cqw;overflow-wrap:anywhere}
 .share:hover,.share.done{color:var(--red)}
 .share:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
 .padnote{position:absolute;left:16cqw;right:8cqw;top:62cqw;text-align:center;font-family:var(--f-hand);font-size:4.4cqw;color:var(--ink-soft);opacity:.75;transform:rotate(-2deg);z-index:1}
@@ -409,9 +409,8 @@ const NEXT_DATE=nextDate();
 const daysText=()=>{const n=CFG.days;return n.length>1?n.slice(0,-1).join(", ")+" and "+n[n.length-1]:n[0]||""};
 
 /* ================= pages =================
-   Every article starts on a left page. Long articles continue onto
-   as many pages as they need; a blank "second thoughts" page pads an
-   article that ends on a left page. */
+   Long articles continue onto as many pages as they need, and the
+   next entry starts on the very next page, left or right. */
 let P=[],MAXK=0,FIRST_ART=0;const START={},SLUG={};
 const pageNo=i=>i>=FIRST_ART?i-FIRST_ART+1:"";
 
@@ -554,7 +553,7 @@ function paginate(e){
 }
 function buildBook(){
   const arts=[];
-  ENTRIES.forEach(e=>{const pg=paginate(e);if(pg.length%2)pg.push({kind:"pad"});arts.push(pg)});
+  ENTRIES.forEach(e=>arts.push(paginate(e)));
   const rows=[];let mon="";
   ENTRIES.forEach(e=>{const m=MONTHS[e.date.getMonth()]+" "+e.date.getFullYear();if(m!==mon){rows.push({t:"m",x:m});mon=m}rows.push({t:"e",j:e.j})});
   const contents=[];let r=rows.slice(),cap=16;
@@ -563,6 +562,7 @@ function buildBook(){
   if(front.length%2===0)front.push({kind:"pad"});
   FIRST_ART=front.length;P=front;
   arts.forEach((pg,j)=>{START[j]=P.length;SLUG[ENTRIES[j].slug]=j;P=P.concat(pg)});
+  if(P.length%2===0)P.push({kind:"pad"});
   P.push({kind:"next"},{kind:"endp2"});
   MAXK=Math.floor(P.length/2);
   meas.innerHTML="";
@@ -824,7 +824,7 @@ async function go(t){
   endLeaf();land();
 }
 const step=d=>go((mode==="spread"?k:pi)+d);
-const goEntry=j=>go(mode==="spread"?(START[j]+1)/2:START[j]);
+const goEntry=j=>go(mode==="spread"?Math.ceil(START[j]/2):START[j]);
 const goContents=()=>go(mode==="spread"?1:2);
 
 function entryURL(slug){
@@ -891,7 +891,7 @@ fontsReady.then(()=>{
   buildBook();
   const hs=(location.hash||"").slice(1),old=hs.match(/^e(\d+)$/);
   const j=hs in SLUG?SLUG[hs]:(old?Math.min(ENTRIES.length,Math.max(1,+old[1]))-1:-1);
-  if(j>=0&&START[j]!==undefined){if(mode==="spread")k=(START[j]+1)/2;else pi=START[j];}
+  if(j>=0&&START[j]!==undefined){if(mode==="spread")k=Math.ceil(START[j]/2);else pi=START[j];}
   renderStatic();booted=true;if(j>=0)land();
 });
 })();
