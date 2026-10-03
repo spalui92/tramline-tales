@@ -206,6 +206,19 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 .padnote{position:absolute;left:16cqw;right:8cqw;top:62cqw;text-align:center;font-family:var(--f-hand);font-size:4.4cqw;color:var(--ink-soft);opacity:.75;transform:rotate(-2deg);z-index:1}
 .toc .mon{font-family:var(--f-hand);color:var(--red);font-size:4.1cqw;line-height:var(--lh)}
 
+/* postcards pinned into an entry */
+.content p.li{margin-bottom:0;padding-left:5.2cqw;text-indent:-5.2cqw}
+.content p.li + p:not(.li),.content p.li + h3{margin-top:var(--lh)}
+.pc{position:relative;height:calc(var(--lh) * var(--n));margin:0 0 var(--lh);display:flex;align-items:center;justify-content:center}
+.pcard{position:relative;width:60cqw;max-width:100%;box-sizing:border-box;padding:2.6cqw 2.6cqw 1.6cqw;transform:rotate(var(--rot));
+  background:#f7eedb;background-image:var(--grain),linear-gradient(160deg,#fbf5e6,#efe1c2);background-size:140px,auto;
+  border:.25cqw solid rgba(120,90,50,.25);border-radius:.6cqw;
+  box-shadow:0 .4cqw .6cqw rgba(50,30,10,.25),0 1.6cqw 3cqw rgba(50,30,10,.28)}
+.pcard img{display:block;width:100%;height:auto;aspect-ratio:var(--ar);object-fit:cover;max-width:100%;border:.5cqw solid #fffaf0;box-shadow:0 0 0 .2cqw rgba(120,90,50,.18);filter:sepia(.12) contrast(1.02)}
+.pcard figcaption{font-family:var(--f-hand);color:var(--red);font-size:3.9cqw;line-height:1.05;padding-top:1.4cqw;min-height:5.6cqw}
+.pcard .pm{position:absolute;right:1.2cqw;top:-1.4cqw;width:20cqw;height:10cqw;color:rgba(55,40,75,.55);mix-blend-mode:multiply;font-family:var(--f-type)}
+.pc .clip{position:absolute;top:calc(50% - var(--lh) * var(--n) / 2 - .4cqw);width:4.4cqw;height:12cqw;z-index:3;filter:drop-shadow(.3cqw .4cqw .3cqw rgba(30,15,0,.35));transform-origin:50% 30%}
+
 /* cover */
 .page.cover{background:var(--cloth);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),inset 0 0 50px rgba(0,0,0,.45)}
 .page.cover::before{background:linear-gradient(90deg,rgba(0,0,0,.4) 0,rgba(0,0,0,.15) 6%,rgba(255,255,255,.06) 7%,rgba(0,0,0,0) 9%)}
@@ -426,7 +439,25 @@ function stain(i){
   const s=30+r()*25; return `<i class="stain" style="width:${s}cqw;height:${s}cqw;left:${40+r()*45}cqw;top:${10+r()*100}cqw"></i>`;
 }
 function runhead(left,right){return `<div class="runhead"><span>${left}</span><span class="no">${right}</span></div>`}
-const blockHTML=b=>b.t==="h"?`<h3 class="sub">${esc(b.x)}</h3>`:`<p${b.cont?' class="cont"':""}>${esc(b.x)}</p>`;
+/* a photo pinned into the notebook as a postcard with a paper clip */
+const CLIPS=["#b8322c","#2f7f86","#c9971c"];
+function postcard(b){
+  let hsh=0;for(const c of b.src)hsh=(hsh*31+c.charCodeAt(0))>>>0;
+  const r=rng(hsh),ar=b.w/b.h,cardW=60,imgW=cardW-5.2,imgH=imgW/ar;
+  const total=imgH+13.5+6,n=Math.ceil(total/5.4);
+  const rot=((r()-.5)*5).toFixed(2),clipL=(12+r()*30).toFixed(1),clipR=((r()-.5)*16).toFixed(1),col=CLIPS[hsh%3];
+  const pmR=(-12+r()*10).toFixed(1);
+  return `<figure class="pc" style="--n:${n};--ar:${b.w}/${b.h};--rot:${rot}deg">
+    <div class="pcard">
+      <img src="${esc(b.src)}" alt="${esc(b.x)}" loading="lazy" decoding="async" width="${b.w}" height="${b.h}">
+      <figcaption>${esc(b.x)}</figcaption>
+      <svg class="pm" viewBox="0 0 120 60" aria-hidden="true" style="transform:rotate(${pmR}deg)"><circle cx="30" cy="30" r="22" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="30" cy="30" r="15" fill="none" stroke="currentColor" stroke-width="1"/><text x="30" y="34" text-anchor="middle" font-size="9" fill="currentColor">${esc(CFG.stampPlace.toUpperCase().slice(0,8))}</text><path d="M56 18 q8-5 16 0 t16 0 t16 0 M56 30 q8-5 16 0 t16 0 t16 0 M56 42 q8-5 16 0 t16 0 t16 0" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    </div>
+    <svg class="clip" viewBox="0 0 22 60" aria-hidden="true" style="left:${clipL}cqw;transform:rotate(${clipR}deg);color:${col}"><path d="M7 40 V10 a4 4 0 0 1 8 0 V46 a7 7 0 0 1 -14 0 V14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M7 40 V10 a4 4 0 0 1 8 0 V46 a7 7 0 0 1 -14 0 V14" fill="none" stroke="rgba(255,255,255,.45)" stroke-width=".8" stroke-linecap="round" transform="translate(-.6 -.6)"/></svg>
+  </figure>`;
+}
+const isLi=x=>/^[A-Z]\/\.\s/.test(x);
+const blockHTML=b=>b.t==="h"?`<h3 class="sub">${esc(b.x)}</h3>`:b.t==="img"?postcard(b):`<p class="${[b.cont?"cont":"",!b.cont&&isLi(b.x)?"li":""].join(" ").trim()}">${esc(b.x)}</p>`;
 
 function artInner(p,i,pending,measuring){
   const e=p.e,j=e.j,first=p.n===0;
@@ -499,6 +530,8 @@ function fillPage(p,q){
       q.shift();continue;
     }
     p.blocks.pop();
+    // a postcard that won't fit lets the next paragraph flow up, and waits for the next page
+    if(b.t==="img"&&p.blocks.length&&q[1]&&q[1].t==="p"){q.splice(0,2,q[1],b);continue}
     if(b.t!=="p"){if(!p.blocks.length){p.blocks.push(q.shift())}return}
     const words=b.x.split(" ");let lo=0,hi=words.length-1;
     while(lo<hi){const mid=Math.ceil((lo+hi)/2);p.blocks.push({t:"p",x:words.slice(0,mid).join(" "),cont:b.cont});const ok=fits(p);p.blocks.pop();ok?lo=mid:hi=mid-1}

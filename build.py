@@ -29,6 +29,24 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July",
           "August", "September", "October", "November", "December"]
 
 
+def image_size(path):
+    """Width and height of a JPEG or PNG, without extra packages."""
+    data = path.read_bytes()
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
+    if data[:2] == b"\xff\xd8":
+        i = 2
+        while i < len(data):
+            if data[i] != 0xFF:
+                i += 1
+                continue
+            marker = data[i + 1]
+            if marker in (0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
+                return int.from_bytes(data[i + 7:i + 9], "big"), int.from_bytes(data[i + 5:i + 7], "big")
+            i += 2 + int.from_bytes(data[i + 2:i + 4], "big")
+    sys.exit(f"{path.name}: use a .jpg or .png image")
+
+
 def read_article(path):
     text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
     meta, body = {}, text
@@ -51,11 +69,19 @@ def read_article(path):
         chunk = " ".join(chunk.split())
         if not chunk:
             continue
-        if chunk.startswith("## "):
+        img = re.fullmatch(r"!\[(.*?)\]\((.+?)\)", chunk)
+        if img:
+            src = img.group(2).strip()
+            file = ROOT / src
+            if not file.exists():
+                sys.exit(f"{path.name}: picture not found: {src}")
+            w, h = image_size(file)
+            blocks.append({"t": "img", "x": img.group(1).strip(), "src": src, "w": w, "h": h})
+        elif chunk.startswith("## "):
             blocks.append({"t": "h", "x": chunk[3:].strip()})
         else:
             blocks.append({"t": "p", "x": chunk})
-    if not blocks:
+    if not any(b["t"] == "p" for b in blocks):
         sys.exit(f"{path.name}: the article has no text")
     summary = meta.get("summary") or next((b["x"] for b in blocks if b["t"] == "p"), "")
     if len(summary) > 160:
@@ -67,6 +93,7 @@ def read_article(path):
         "tag": meta.get("tag", ""),
         "note": meta.get("note", ""),
         "summary": summary,
+        "image": next((b["src"] for b in blocks if b["t"] == "img"), ""),
         "body": blocks,
     }
 
@@ -94,10 +121,19 @@ def archive_html(cfg, entries):
         out.append(f'<article id="a-{esc(e["slug"])}"><h2>{esc(e["title"])}</h2>'
                    f'<p><time datetime="{e["date"]}">{long_date(e["date"])}</time></p>')
         for b in e["body"]:
-            out.append(f'<h3>{esc(b["x"])}</h3>' if b["t"] == "h" else f'<p>{esc(b["x"])}</p>')
+            out.append(block_html(b, "", 3))
         out.append(f'<p><a href="e/{esc(e["slug"])}.html">Link to this entry</a></p></article>')
     out.append("</section>")
     return "\n".join(out)
+
+
+def block_html(b, prefix, level):
+    if b["t"] == "h":
+        return f'<h{level}>{esc(b["x"])}</h{level}>'
+    if b["t"] == "img":
+        return (f'<figure><img src="{esc(prefix + b["src"])}" alt="{esc(b["x"])}" '
+                f'width="{b["w"]}" height="{b["h"]}" loading="lazy"><figcaption>{esc(b["x"])}</figcaption></figure>')
+    return f'<p>{esc(b["x"])}</p>'
 
 
 def index_meta(cfg, entries):
@@ -135,9 +171,9 @@ def index_meta(cfg, entries):
 def entry_page(cfg, e):
     page_url = abs_url(cfg, f"e/{e['slug']}.html")
     diary = f"../#{e['slug']}"
-    image = abs_url(cfg, "og-cover.png") if cfg.get("siteUrl") else "../og-cover.png"
-    body = "\n".join(f'<h2>{esc(b["x"])}</h2>' if b["t"] == "h" else f'<p>{esc(b["x"])}</p>'
-                     for b in e["body"])
+    pic = e["image"] or "og-cover.png"
+    image = abs_url(cfg, pic) if cfg.get("siteUrl") else "../" + pic
+    body = "\n".join(block_html(b, "../", 2) for b in e["body"])
     canonical = f'<link rel="canonical" href="{esc(page_url)}">' if cfg.get("siteUrl") else ""
     return f"""<!doctype html>
 <html lang="en">
@@ -161,6 +197,7 @@ def entry_page(cfg, e):
 <script>location.replace({json.dumps(diary)});</script>
 <style>
 body{{margin:0;background:#9a693b;font-family:"Courier Prime","Courier New",monospace;color:#2b2724;padding:24px 16px}}
+img{{max-width:100%;height:auto}}figure{{margin:2rem 0}}figcaption{{font-style:italic;color:#6b6155}}
 main{{max-width:40rem;margin:0 auto;background:#efdfbb;padding:32px 28px;line-height:1.8;box-shadow:0 10px 30px rgba(0,0,0,.35)}}
 h1,h2{{color:#1f3a68;font-weight:400;text-wrap:balance}}
 a{{color:#1f3a68}}
@@ -206,6 +243,8 @@ def main():
     (OUT / "index.html").write_text(head + page, encoding="utf-8")
     for e in entries:
         (OUT / "e" / f"{e['slug']}.html").write_text(entry_page(cfg, e), encoding="utf-8")
+    if (ROOT / "images").is_dir():
+        shutil.copytree(ROOT / "images", OUT / "images")
     if (ROOT / "og-cover.png").exists():
         shutil.copy(ROOT / "og-cover.png", OUT / "og-cover.png")
     (OUT / ".nojekyll").write_text("")
