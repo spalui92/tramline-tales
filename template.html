@@ -33,18 +33,7 @@
   --f-hand:"Nanum Pen Script","Bradley Hand","Segoe Print",cursive;
   --pw:420px; --ph:594px;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --wood:#3b2414; --wood-line:#120802; --stripe:rgba(0,0,0,0); --stripe-on:0;
-    --room:radial-gradient(ellipse 60% 55% at 38% 32%, rgba(255,186,104,.16) 0%, rgba(255,186,104,0) 60%), radial-gradient(ellipse at 45% 45%, rgba(0,0,0,0) 30%, rgba(6,3,1,.78) 95%);
-    --mote:255,196,130; color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --wood:#3b2414; --wood-line:#120802; --stripe:rgba(0,0,0,0); --stripe-on:0;
-  --room:radial-gradient(ellipse 60% 55% at 38% 32%, rgba(255,186,104,.16) 0%, rgba(255,186,104,0) 60%), radial-gradient(ellipse at 45% 45%, rgba(0,0,0,0) 30%, rgba(6,3,1,.78) 95%);
-  --mote:255,196,130; color-scheme:dark;
-}
+/* one look, locked: honey-oak desk in daylight, whatever the device theme */
 html,body{height:100%;overflow:hidden}
 body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
 
