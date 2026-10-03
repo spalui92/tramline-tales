@@ -713,29 +713,17 @@ function sFlip(){
   const g=ac.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.14,t+.22);
   g.gain.linearRampToValueAtTime(.09,t+.45);g.gain.exponentialRampToValueAtTime(.0003,t+dur);
   src.connect(hp).connect(bp).connect(g).connect(out());src.start(t);
-  chime(t+.12);
 }
-/* a faint wind chime: two or three bell tones from a pentatonic scale, drifting in after the swish */
-const CHIME=[1046.5,1174.7,1318.5,1568,1760,2093];
-function bell(t,f,v){
-  [[1,1],[2.76,.32],[5.4,.12]].forEach(([r,a])=>{
-    const o=ac.createOscillator(),g=ac.createGain();o.type="sine";o.frequency.value=f*r;
-    const len=2.2/r**.4;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v*a,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+len);
-    o.connect(g).connect(out());o.start(t);o.stop(t+len+.05);
-  });
-}
-function chime(t){
-  const k=2+(Math.random()<.5?1:0);let at=t;
-  for(let i=0;i<k;i++){bell(at,CHIME[Math.floor(Math.random()*CHIME.length)],.05+Math.random()*.025);at+=.11+Math.random()*.2;}
-}
-/* rubber stamp: a clear, firm knock of wood on paper on a desk */
+/* rubber stamp: a firm, prominent knock of wood on paper on a desk (louder than everything else) */
 function sThunk(){
   if(!soundOn||!ac)return;const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
-  o.type="sine";o.frequency.setValueAtTime(190,t);o.frequency.exponentialRampToValueAtTime(70,t+.12);
-  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.75,t+.004);g.gain.exponentialRampToValueAtTime(.001,t+.18);
-  o.connect(g).connect(out());o.start(t);o.stop(t+.2);
-  noise(.045,1500,"bandpass",.55);   // the crisp contact of the stamp face
-  noise(.09,500,"lowpass",.3);       // the desk underneath
+  o.type="sine";o.frequency.setValueAtTime(210,t);o.frequency.exponentialRampToValueAtTime(65,t+.14);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.95,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+.22);
+  o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.25);
+  const n=Math.floor(ac.sampleRate*.06),b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n)**3;
+  const src=ac.createBufferSource();src.buffer=b;const f=ac.createBiquadFilter();f.type="bandpass";f.frequency.value=1400;f.Q.value=.7;
+  const ng=ac.createGain();ng.gain.value=.9;src.connect(f).connect(ng).connect(ac.destination);src.start(t);
 }
 
 /* walnut pen cup, knocked over mid-thought */
