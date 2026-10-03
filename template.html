@@ -417,9 +417,9 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 <canvas id="motes" aria-hidden="true"></canvas>
 
 <nav class="bar" aria-label="Turn pages">
-  <button class="tix" id="prev" aria-label="Previous page"><span class="st" id="prevNo">&middot;</span><span class="tx"><span>&#9666; <span class="lg">Previous </span>stop</span><small id="prevSm">one page back</small></span></button>
+  <button class="tix" id="prev" aria-label="Previous page"><span class="st" id="prevNo">&middot;</span><span class="tx"><span>&#9666; Rewind</span><small id="prevSm">back a page</small></span></button>
   <div class="plate-b" aria-live="polite"><b id="plateTop">Tramline Tales · Vol. I</b><span id="plateBot">Tap the cover to open</span></div>
-  <button class="tix" id="next" aria-label="Next page"><span class="tx"><span><span class="lg">Next </span>stop &#9656;</span><small id="nextSm">fare: one page</small></span><span class="st" id="nextNo">&middot;</span></button>
+  <button class="tix" id="next" aria-label="Next page"><span class="tx"><span>Onward &#9656;</span><small id="nextSm">fare: one page</small></span><span class="st" id="nextNo">&middot;</span></button>
   <div class="keys-sm">
     <button class="key sm" id="toc" aria-label="Go to contents">C</button>
     <button class="key sm" id="snd" aria-label="Typewriter sound" aria-pressed="false">&#9834;</button>
@@ -792,7 +792,7 @@ function ui(){
   $("prevNo").textContent=atStart?"\u00b7":stopNo(cur[0]-1);
   $("nextNo").textContent=atEnd?"\u00b7":stopNo(cur[1]+1);
   $("nextSm").textContent=atEnd?"terminus":"fare: one page";
-  $("prevSm").textContent=atStart?"depot":"one page back";
+  $("prevSm").textContent=atStart?"depot":"back a page";
   if(scene.classList.contains("tablet")){
     const last=Math.max(1,P.length-1),pc=i=>(100*i/last).toFixed(2)+"%";
     $("track").innerHTML=`<i class="line"></i><i class="done" style="width:${pc(pi)}"></i>`+
