@@ -837,7 +837,9 @@ function ui(){
   let top=`${CFG.name} · Vol. ${ROMAN(Math.max(1,new Date().getFullYear()-base.getFullYear()+1))}`,bot="Tap the cover to open";
   const near=[p,P[idx+1]].find(x=>x&&x.kind==="art");
   if(p.kind==="endp"||p.kind==="contents"){top="Contents";bot=`${ENTRIES.length} ${ENTRIES.length===1?"entry":"entries"} so far`;}
-  else if(near){const rp=p.kind==="art"?p:near;top=rp.sec||rp.e.title;bot=longDate(near.e.date);}
+  else if(near){let rp=p.kind==="art"?p:near;const q=P[idx+1];
+    if(mode==="spread"&&q&&q.kind==="art"&&q.n===0&&rp.e!==q.e)rp=q;   // a new entry opens on the right-hand page
+    top=rp.sec||rp.e.title;bot=longDate(rp.e.date);}
   else if(p.kind==="next"||p.kind==="endp2"){top="To be continued";bot="Next entry · "+shortDate(NEXT_DATE);}
   try{const sl=near&&p.kind==="art"&&p.n===0?near.e.slug:null;if(booted)history.replaceState(null,"",sl?"#"+sl:location.pathname+location.search)}catch(_){}
   $("plateTop").textContent=top;$("plateBot").textContent=bot;
