@@ -689,7 +689,8 @@ function tickMotes(t){
 function readTheme(){moteRGB=getComputedStyle(document.documentElement).getPropertyValue("--mote").trim()||moteRGB;drawDesk();if(reduce)tickMotes(0)}
 
 /* ================= sound (off by default) ================= */
-let ac=null,soundOn=true;
+let ac=null,soundOn=true,bus=null;
+const out=()=>{if(!bus){bus=ac.createGain();bus.gain.value=.38;bus.connect(ac.destination)}return bus};
 const unlockAudio=()=>{if(!soundOn)return;if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(_){return}}if(ac.state==="suspended")ac.resume()};
 ["pointerdown","keydown","touchstart"].forEach(ev=>addEventListener(ev,unlockAudio,{capture:true,passive:true}));
 function noise(dur,freq,type,gain){
@@ -697,29 +698,28 @@ function noise(dur,freq,type,gain){
   for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
   const s=ac.createBufferSource();s.buffer=b;const f=ac.createBiquadFilter();f.type=type;f.frequency.value=freq;
   const g=ac.createGain();g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
-  s.connect(f).connect(g).connect(ac.destination);s.start();
+  s.connect(f).connect(g).connect(out());s.start();
 }
-const sClick=()=>noise(.03,3200,"highpass",.22);
-/* a page turning: a soft lift, an airy swish that rises and falls, a few paper crackles, then the leaf settling */
+const sClick=()=>noise(.025,3000,"highpass",.09);
+/* a page turning: a soft, breezy swish of paper, no crackle, landing like a sigh */
 function sFlip(){
-  if(!soundOn||!ac)return;const t=ac.currentTime,sr=ac.sampleRate,dur=.62,n=Math.floor(sr*dur);
-  const b=ac.createBuffer(1,n,sr),d=b.getChannelData(0);let br=0;
-  for(let i=0;i<n;i++){const w=Math.random()*2-1;br=br*.92+w*.08;d[i]=br*3+w*.35;
-    if(Math.random()<.0009)for(let c=0;c<40&&i+c<n;c++)d[i+c]+=(Math.random()*2-1)*.9*(1-c/40);}
+  if(!soundOn||!ac)return;const t=ac.currentTime,sr=ac.sampleRate,dur=.75,n=Math.floor(sr*dur);
+  const b=ac.createBuffer(1,n,sr),d=b.getChannelData(0);let pink=0;
+  for(let i=0;i<n;i++){pink=pink*.97+(Math.random()*2-1)*.03;d[i]=pink*6;}
   const src=ac.createBufferSource();src.buffer=b;
-  const bp=ac.createBiquadFilter();bp.type="bandpass";bp.Q.value=.8;
-  bp.frequency.setValueAtTime(700,t);bp.frequency.linearRampToValueAtTime(2600,t+.24);bp.frequency.exponentialRampToValueAtTime(900,t+dur);
-  const g=ac.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.32,t+.07);
-  g.gain.linearRampToValueAtTime(.26,t+.3);g.gain.exponentialRampToValueAtTime(.0005,t+dur);
-  src.connect(bp).connect(g).connect(ac.destination);src.start(t);
-  setTimeout(()=>noise(.09,420,"lowpass",.22),Math.round(dur*820));
+  const hp=ac.createBiquadFilter();hp.type="highpass";hp.frequency.value=260;
+  const bp=ac.createBiquadFilter();bp.type="bandpass";bp.Q.value=.45;
+  bp.frequency.setValueAtTime(900,t);bp.frequency.linearRampToValueAtTime(2200,t+.32);bp.frequency.linearRampToValueAtTime(1100,t+dur);
+  const g=ac.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.14,t+.22);
+  g.gain.linearRampToValueAtTime(.09,t+.45);g.gain.exponentialRampToValueAtTime(.0003,t+dur);
+  src.connect(hp).connect(bp).connect(g).connect(out());src.start(t);
 }
 /* rubber stamp: a dull wooden knock with a little body */
 function sThunk(){
   if(!soundOn||!ac)return;const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
   o.type="sine";o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(55,t+.16);
-  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.7,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+.22);
-  o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.25);noise(.07,900,"lowpass",.35);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.4,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+.22);
+  o.connect(g).connect(out());o.start(t);o.stop(t+.25);noise(.06,700,"lowpass",.15);
 }
 
 /* walnut pen cup, knocked over mid-thought */
