@@ -261,7 +261,7 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 .plate-b::before,.plate-b::after{content:"";position:absolute;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;
   background:radial-gradient(circle at 35% 35%,#f3e2b5,#7a5a22)}
 .plate-b::before{left:7px}.plate-b::after{right:7px}
-.plate-b b{display:block;font-weight:400;font-size:12px;letter-spacing:.18em;text-transform:uppercase;text-shadow:0 1px 0 rgba(255,240,200,.5)}
+.plate-b b{display:block;font-weight:400;font-size:12px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,240,200,.5)}
 .plate-b span{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,240,200,.5)}
 .keys-sm{display:flex;gap:14px;align-items:center}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -270,7 +270,7 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 @media (min-width:900px){
   .stage{padding-block:24px 74px}
   .bar{padding-top:0;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));gap:12px}
-  .plate-b{padding:4px 18px;flex-basis:16rem}
+  .plate-b{padding:4px 18px;flex-basis:21rem}
   .plate-b span{font-size:14px}
 }
 @media (max-width:560px){
@@ -427,7 +427,7 @@ body.tab .plate-b span{font-size:13px}
   <button class="tix" id="next" aria-label="Next page"><span class="tx"><span>Onward &#9656;</span><small id="nextSm">fare: one page</small></span><span class="st" id="nextNo">&middot;</span></button>
   <div class="keys-sm">
     <button class="key sm" id="toc" aria-label="Go to contents">C</button>
-    <button class="key sm" id="snd" aria-label="Typewriter sound" aria-pressed="false">&#9834;</button>
+    <button class="key sm" id="snd" aria-label="Sound" aria-pressed="true">&#9834;</button>
   </div>
 </nav>
 
@@ -613,6 +613,10 @@ function buildBook(){
   const front=[{kind:"cover"},{kind:"endp"},...contents];
   if(front.length%2===0)front.push({kind:"pad"});
   FIRST_ART=front.length;P=front;
+  arts.forEach(pg=>{let cur=null;pg.forEach(p=>{
+    // the sub-heading being read on this page: the one in force at its first line
+    const first=p.blocks.find(b=>b.t!=="img");p.sec=first&&first.t==="h"?first.x:cur;
+    p.blocks.forEach(b=>{if(b.t==="h")cur=b.x});});});
   arts.forEach((pg,j)=>{START[j]=P.length;SLUG[ENTRIES[j].slug]=j;P=P.concat(pg)});
   // no blank filler: the next-entry page follows straight on, left or right
   if(P.length%2===0)P.push({kind:"next"});
@@ -685,7 +689,9 @@ function tickMotes(t){
 function readTheme(){moteRGB=getComputedStyle(document.documentElement).getPropertyValue("--mote").trim()||moteRGB;drawDesk();if(reduce)tickMotes(0)}
 
 /* ================= sound (off by default) ================= */
-let ac=null,soundOn=false;
+let ac=null,soundOn=true;
+const unlockAudio=()=>{if(!soundOn)return;if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(_){return}}if(ac.state==="suspended")ac.resume()};
+["pointerdown","keydown","touchstart"].forEach(ev=>addEventListener(ev,unlockAudio,{capture:true,passive:true}));
 function noise(dur,freq,type,gain){
   if(!soundOn||!ac)return;const t=ac.currentTime,n=Math.floor(ac.sampleRate*dur),b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);
   for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
@@ -694,8 +700,27 @@ function noise(dur,freq,type,gain){
   s.connect(f).connect(g).connect(ac.destination);s.start();
 }
 const sClick=()=>noise(.03,3200,"highpass",.22);
-const sFlip=()=>{noise(.38,1500,"bandpass",.35);setTimeout(()=>noise(.18,700,"lowpass",.25),420)};
-const sThunk=()=>noise(.12,180,"lowpass",.6);
+/* a page turning: a soft lift, an airy swish that rises and falls, a few paper crackles, then the leaf settling */
+function sFlip(){
+  if(!soundOn||!ac)return;const t=ac.currentTime,sr=ac.sampleRate,dur=.62,n=Math.floor(sr*dur);
+  const b=ac.createBuffer(1,n,sr),d=b.getChannelData(0);let br=0;
+  for(let i=0;i<n;i++){const w=Math.random()*2-1;br=br*.92+w*.08;d[i]=br*3+w*.35;
+    if(Math.random()<.0009)for(let c=0;c<40&&i+c<n;c++)d[i+c]+=(Math.random()*2-1)*.9*(1-c/40);}
+  const src=ac.createBufferSource();src.buffer=b;
+  const bp=ac.createBiquadFilter();bp.type="bandpass";bp.Q.value=.8;
+  bp.frequency.setValueAtTime(700,t);bp.frequency.linearRampToValueAtTime(2600,t+.24);bp.frequency.exponentialRampToValueAtTime(900,t+dur);
+  const g=ac.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.32,t+.07);
+  g.gain.linearRampToValueAtTime(.26,t+.3);g.gain.exponentialRampToValueAtTime(.0005,t+dur);
+  src.connect(bp).connect(g).connect(ac.destination);src.start(t);
+  setTimeout(()=>noise(.09,420,"lowpass",.22),Math.round(dur*820));
+}
+/* rubber stamp: a dull wooden knock with a little body */
+function sThunk(){
+  if(!soundOn||!ac)return;const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
+  o.type="sine";o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(55,t+.16);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.7,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+.22);
+  o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.25);noise(.07,900,"lowpass",.35);
+}
 
 /* walnut pen cup, knocked over mid-thought */
 (function stand(){
@@ -808,7 +833,7 @@ function ui(){
   let top=`${CFG.name} · Vol. ${ROMAN(Math.max(1,new Date().getFullYear()-base.getFullYear()+1))}`,bot="Tap the cover to open";
   const near=[p,P[idx+1]].find(x=>x&&x.kind==="art");
   if(p.kind==="endp"||p.kind==="contents"){top="Contents";bot=`${ENTRIES.length} ${ENTRIES.length===1?"entry":"entries"} so far`;}
-  else if(near){top=`Entry ${String(near.e.j+1).padStart(2,"0")} of ${String(ENTRIES.length).padStart(2,"0")}`;bot=longDate(near.e.date);}
+  else if(near){const rp=p.kind==="art"?p:near;top=rp.sec||rp.e.title;bot=longDate(near.e.date);}
   else if(p.kind==="next"||p.kind==="endp2"){top="To be continued";bot="Next entry · "+shortDate(NEXT_DATE);}
   try{const sl=near&&p.kind==="art"&&p.n===0?near.e.slug:null;if(booted)history.replaceState(null,"",sl?"#"+sl:location.pathname+location.search)}catch(_){}
   $("plateTop").textContent=top;$("plateBot").textContent=bot;
