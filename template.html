@@ -210,7 +210,7 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 .content p.li{margin-bottom:0;padding-left:5.2cqw;text-indent:-5.2cqw}
 .content p.li + p:not(.li),.content p.li + h3{margin-top:var(--lh)}
 .pc{position:relative;height:calc(var(--lh) * var(--n));margin:0 0 var(--lh);display:flex;align-items:center;justify-content:center}
-.pcard{position:relative;width:60cqw;max-width:100%;box-sizing:border-box;padding:2.6cqw 2.6cqw 1.6cqw;transform:rotate(var(--rot));
+.pcard{position:relative;width:54cqw;max-width:100%;box-sizing:border-box;padding:2.6cqw 2.6cqw 1.6cqw;transform:rotate(var(--rot));
   background:#f7eedb;background-image:var(--grain),linear-gradient(160deg,#fbf5e6,#efe1c2);background-size:140px,auto;
   border:.25cqw solid rgba(120,90,50,.25);border-radius:.6cqw;
   box-shadow:0 .4cqw .6cqw rgba(50,30,10,.25),0 1.6cqw 3cqw rgba(50,30,10,.28)}
@@ -443,8 +443,9 @@ function runhead(left,right){return `<div class="runhead"><span>${left}</span><s
 const CLIPS=["#b8322c","#2f7f86","#c9971c"];
 function postcard(b){
   let hsh=0;for(const c of b.src)hsh=(hsh*31+c.charCodeAt(0))>>>0;
-  const r=rng(hsh),ar=b.w/b.h,cardW=60,imgW=cardW-5.2,imgH=imgW/ar;
-  const total=imgH+13.5+6,n=Math.ceil(total/5.4);
+  const r=rng(hsh),ar=b.w/b.h,cardW=54,imgW=cardW-6.2,imgH=imgW/ar;
+  const capLines=Math.max(1,Math.ceil(b.x.length/28));
+  const total=imgH+10.7+(capLines-1)*4.1+2.4,n=Math.ceil(total/5.4);
   const rot=((r()-.5)*5).toFixed(2),clipL=(12+r()*30).toFixed(1),clipR=((r()-.5)*16).toFixed(1),col=CLIPS[hsh%3];
   const pmR=(-12+r()*10).toFixed(1);
   return `<figure class="pc" style="--n:${n};--ar:${b.w}/${b.h};--rot:${rot}deg">
@@ -531,7 +532,7 @@ function fillPage(p,q){
     }
     p.blocks.pop();
     // a postcard that won't fit lets the next paragraph flow up, and waits for the next page
-    if(b.t==="img"&&p.blocks.length&&q[1]&&q[1].t==="p"){q.splice(0,2,q[1],b);continue}
+    if(b.t==="img"&&p.blocks.length&&q[1]&&q[1].t==="p"&&q.slice(1).filter(x=>x.t==="p").length>2){q.splice(0,2,q[1],b);continue}
     if(b.t!=="p"){if(!p.blocks.length){p.blocks.push(q.shift())}return}
     const words=b.x.split(" ");let lo=0,hi=words.length-1;
     while(lo<hi){const mid=Math.ceil((lo+hi)/2);p.blocks.push({t:"p",x:words.slice(0,mid).join(" "),cont:b.cont});const ok=fits(p);p.blocks.pop();ok?lo=mid:hi=mid-1}
@@ -544,8 +545,17 @@ function paginate(e){
   while(q.length||!pages.length){const p={kind:"art",e,n:pages.length,blocks:[],last:false};fillPage(p,q);pages.push(p);if(!q.length)break}
   // the final page also carries the signature and stamp, so it holds a little less
   let lp=pages[pages.length-1];lp.last=true;
-  if(!fits(lp)){const q2=lp.blocks;lp.blocks=[];fillPage(lp,q2);lp.last=false;
-    const np={kind:"art",e,n:pages.length,blocks:[],last:true};fillPage(np,q2);pages.push(np);}
+  if(!fits(lp)){
+    // carry the closing paragraph or two, whole, onto a final page with the signature and stamp
+    lp.last=false;const np={kind:"art",e,n:pages.length,blocks:[],last:true};
+    while(lp.blocks.length>1&&np.blocks.length<2&&lp.blocks[lp.blocks.length-1].t==="p"){
+      const b=lp.blocks.pop();np.blocks.unshift(b);
+      if(!fits(np)){np.blocks.shift();lp.blocks.push(b);break}
+    }
+    if(np.blocks.length){pages.push(np)}
+    else{const q2=lp.blocks;lp.blocks=[];lp.last=true;fillPage(lp,q2);lp.last=false;
+      const np2={kind:"art",e,n:pages.length,blocks:[],last:true};fillPage(np2,q2);pages.push(np2);}
+  }
   pages[pages.length-1].last=true;
   return pages;
 }

@@ -25,7 +25,9 @@ First paragraph. Leave an empty line between paragraphs.
 More text.
 ```
 
-Only `title` and `date` are required. `tag` is the small red label above the date, `note` is a handwritten scribble in the margin, and `summary` is used for search results and shared links (if left out, the first lines of the article are used).
+Only `title` is required. Leave out `date` and the diary uses the day the file was added (India time). `tag` is the small red label above the date, `note` is a handwritten scribble in the margin, and `summary` is used for search results and shared links (if left out, the first lines of the article are used).
+
+To add a photo, put the picture in the `images/` folder and add a line of its own in the article: `![a short handwritten caption](images/photo.jpg)`. It appears as a clipped postcard.
 
 3. Commit the file. GitHub rebuilds and republishes the site on its own in about a minute.
 

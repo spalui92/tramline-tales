@@ -16,6 +16,7 @@ Usage:  python3 build.py            (no extra packages needed)
         python3 build.py --preview  also writes _preview.html for previews
 """
 import datetime
+import subprocess
 import html
 import json
 import re
@@ -47,6 +48,21 @@ def image_size(path):
     sys.exit(f"{path.name}: use a .jpg or .png image")
 
 
+IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+
+
+def publish_date(path):
+    """The day (India time) the article was first committed; today if it is new."""
+    try:
+        out = subprocess.run(["git", "log", "--diff-filter=A", "--follow", "--format=%aI", "--", str(path)],
+                             cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+        if out:
+            return datetime.datetime.fromisoformat(out[-1]).astimezone(IST).date().isoformat()
+    except (OSError, subprocess.CalledProcessError, ValueError):
+        pass
+    return datetime.datetime.now(IST).date().isoformat()
+
+
 def read_article(path):
     text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
     meta, body = {}, text
@@ -57,9 +73,10 @@ def read_article(path):
                 key, val = line.split(":", 1)
                 meta[key.strip().lower()] = val.strip()
         body = m.group(2)
-    for need in ("title", "date"):
-        if not meta.get(need):
-            sys.exit(f"{path.name}: missing '{need}:' at the top of the file")
+    if not meta.get("title"):
+        sys.exit(f"{path.name}: missing 'title:' at the top of the file")
+    if not meta.get("date"):
+        meta["date"] = publish_date(path)
     try:
         datetime.date.fromisoformat(meta["date"])
     except ValueError:
