@@ -417,9 +417,9 @@ body{background:var(--wood);color:var(--ink);font-family:var(--f-body);-webkit-t
 <canvas id="motes" aria-hidden="true"></canvas>
 
 <nav class="bar" aria-label="Turn pages">
-  <button class="tix" id="prev" aria-label="Previous page"><span class="st" id="prevNo">&middot;</span><span class="tx">&#9666; <span class="lg">Previous </span>stop<small id="prevSm">one page back</small></span></button>
+  <button class="tix" id="prev" aria-label="Previous page"><span class="st" id="prevNo">&middot;</span><span class="tx"><span>&#9666; <span class="lg">Previous </span>stop</span><small id="prevSm">one page back</small></span></button>
   <div class="plate-b" aria-live="polite"><b id="plateTop">Tramline Tales · Vol. I</b><span id="plateBot">Tap the cover to open</span></div>
-  <button class="tix" id="next" aria-label="Next page"><span class="tx"><span class="lg">Next </span>stop &#9656;<small id="nextSm">fare: one page</small></span><span class="st" id="nextNo">&middot;</span></button>
+  <button class="tix" id="next" aria-label="Next page"><span class="tx"><span><span class="lg">Next </span>stop &#9656;</span><small id="nextSm">fare: one page</small></span><span class="st" id="nextNo">&middot;</span></button>
   <div class="keys-sm">
     <button class="key sm" id="toc" aria-label="Go to contents">C</button>
     <button class="key sm" id="snd" aria-label="Typewriter sound" aria-pressed="false">&#9834;</button>
@@ -610,8 +610,9 @@ function buildBook(){
   if(front.length%2===0)front.push({kind:"pad"});
   FIRST_ART=front.length;P=front;
   arts.forEach((pg,j)=>{START[j]=P.length;SLUG[ENTRIES[j].slug]=j;P=P.concat(pg)});
-  if(P.length%2===0)P.push({kind:"pad"});
-  P.push({kind:"next"},{kind:"endp2"});
+  // no blank filler: the next-entry page follows straight on, left or right
+  if(P.length%2===0)P.push({kind:"next"});
+  else P.push({kind:"next"},{kind:"endp2"});
   MAXK=Math.floor(P.length/2);
   meas.innerHTML="";
 }
